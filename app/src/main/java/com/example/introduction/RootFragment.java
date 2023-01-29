@@ -3,15 +3,21 @@ package com.example.introduction;
 import android.annotation.SuppressLint;
 import android.os.Bundle;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.Navigation;
 
 import android.text.Editable;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+
+import com.google.android.material.button.MaterialButton;
+import com.google.android.material.textfield.TextInputEditText;
+import com.google.android.material.textfield.TextInputLayout;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -28,6 +34,9 @@ public class RootFragment extends Fragment {
     // TODO: Rename and change types of parameters
     private String mParam1;
     private String mParam2;
+    private LayoutInflater inflater;
+    private ViewGroup container;
+    private Bundle savedInstanceState;
 
     public RootFragment() {
         // Required empty public constructor
@@ -59,20 +68,45 @@ public class RootFragment extends Fragment {
             mParam2 = getArguments().getString(ARG_PARAM2);
         }
     }
+
     private boolean isPasswordValid(@Nullable Editable text) {
         return text != null && text.length() >= 8;
     }
 
-    @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
+    public View onCreateView(
+            @NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        this.inflater = inflater;
+        this.container = container;
+        this.savedInstanceState = savedInstanceState;
+        // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_root, container, false);
-        @SuppressLint({"MissingInflatedId", "LocalSuppress"}) Button btn1 = view.findViewById(R.id.button);
-        btn1.setOnClickListener(new View.OnClickListener() {
+        final TextInputLayout passwordTextInput = view.findViewById(R.id.password_text_input);
+        final TextInputEditText passwordEditText = view.findViewById(R.id.password_edit_text);
+        MaterialButton nextButton = view.findViewById(R.id.button);
+
+        // Set an error if the password is less than 8 characters.
+        nextButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Navigation.findNavController(view).navigate(R.id.action_rootFragment_to_resultFragment);
+                if (!isPasswordValid(passwordEditText.getText())) {
+                    passwordTextInput.setError(getString(R.string.shr_button_next));
+                } else {
+                    passwordTextInput.setError(null); // Clear the error
+                    Navigation.findNavController(view).navigate(R.id.action_rootFragment_to_resultFragment);
+                }
             }
-        }); return view;
+        });
+
+        // Clear the error once more than 8 characters are typed.
+        passwordEditText.setOnKeyListener(new View.OnKeyListener() {
+            @Override
+            public boolean onKey(View view, int i, KeyEvent keyEvent) {
+                if (isPasswordValid(passwordEditText.getText())) {
+                    passwordTextInput.setError(null); //Clear the error
+                }
+                return false;
+            }
+        });
+        return view;
     }
 }
